@@ -34,7 +34,7 @@ NAME = 'krux-s3'
 
 def get_s3(args=None, logger=None, stats=None):
     """
-    Return a usable Sqs object without creating a class around it.
+    Return a usable S3 object without creating a class around it.
 
     In the context of a krux.cli (or similar) interface the 'args', 'logger'
     and 'stats' objects should already be present. If you don't have them,
