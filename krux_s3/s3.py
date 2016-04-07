@@ -55,23 +55,20 @@ class S3(object):
 
     def __init__(
         self,
+        boto,
         logger=None,
         stats=None,
-        parser=None,
     ):
         # Private variables, not to be used outside this module
         self._name = NAME
         self._logger = logger or get_logger(self._name)
         self._stats = stats or get_stats(prefix=self._name)
-        self._parser = parser or get_parser(description=self._name)
-        self._args = self._parser.parse_args()
 
         # Add the boto connector
-        self.boto = Boto(
-            parser=self._parser,
-            logger=self._logger,
-            stats=self._stats,
-        )
+        if not isinstance(boto, Boto):
+            raise TypeError('krux_s3.s3.S3 only supports krux_boto.boto.Boto')
+
+        self.boto = boto
 
         # Set up default cache
         self._conn = None
