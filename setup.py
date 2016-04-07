@@ -40,6 +40,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
+            'krux-s3-test = krux_s3.cli:main',
         ],
     },
     test_suite='test',
