@@ -104,7 +104,7 @@ class S3(object):
         self._logger = logger or get_logger(self._name)
         self._stats = stats or get_stats(prefix=self._name)
 
-        # Add the boto connector
+        # Throw exception when Boto2 is not used
         if not isinstance(boto, Boto):
             raise TypeError('krux_s3.s3.S3 only supports krux_boto.boto.Boto')
 
