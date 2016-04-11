@@ -102,6 +102,7 @@ class S3(object):
         self._stats = stats or get_stats(prefix=self._name)
 
         # Throw exception when Boto2 is not used
+        # TODO: Start using Boto3 and reverse this check
         if not isinstance(boto, Boto):
             raise TypeError('krux_s3.s3.S3 only supports krux_boto.boto.Boto')
 
