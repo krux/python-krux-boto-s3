@@ -8,25 +8,27 @@ In the current version, `krux_s3.s3.S3` is only compatible with `krux_boto.boto.
 
 ## Application quick start
 
-The most common use case is to build a CLI script using `krux_boto.cli.Application`.
+The most common use case is to build a CLI script using `krux_s3.cli.Application`.
 Here's how to do that:
 
 ```python
 
-from krux_boto.cli import Application
-from krux_s3.s3 import S3
+import krux_s3.cli
+
+# This class inherits from krux.cli.Application, so it provides
+# all that functionality as well.
+class Application(krux_s3.cli.Application):
+    def run(self):
+        for key in self.s3.get_keys(bucket_name='my-test-bucket'):
+            print key.get_contents_as_string()
 
 def main():
-    # The name must be unique to the organization. The object
-    # returned inherits from krux.cli.Application, so it provides
-    # all that functionality as well.
-    app = Application(name='krux-my-boto-script')
+    # The name must be unique to the organization.
+    app = Application(name='krux-my-s3-script')
+    with app.context():
+        app.run()
 
-    s3 = S3(boto=app.boto)
-    for key in s3.get_keys(bucket_name='my-test-bucket'):
-        print key.get_contents_as_string()
-
-### Run the application stand alone
+# Run the application stand alone
 if __name__ == '__main__':
     main()
 
