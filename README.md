@@ -48,7 +48,7 @@ class Application(krux.cli.Application):
     def __init__(self, *args, **kwargs):
         super(Application, self).__init__(*args, **kwargs)
 
-        self.d3 = get_s3(self.args, self.logger, self.stats)
+        self.s3 = get_s3(self.args, self.logger, self.stats)
 
     def add_cli_arguments(self, parser):
         super(Application, self).add_cli_arguments(parser)
