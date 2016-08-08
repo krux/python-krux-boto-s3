@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# © 2016 Krux Digital, Inc.
+# © 2015-2016 Krux Digital, Inc.
 #
 
 #
