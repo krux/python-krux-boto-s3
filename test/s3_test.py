@@ -142,6 +142,37 @@ class S3Test(unittest.TestCase):
         mock_get_bucket.return_value.get_all_keys.assert_called_once_with(prefix=self.TEST_PREFIX)
         self._logger.info.assert_called_once_with('Found following keys: %s', [self.TEST_KEY])
 
+    def test_create_key(self):
+        mock_get_bucket = MagicMock()
+        self._s3._get_bucket = mock_get_bucket
+
+        mock_key = self._boto.s3.key.Key.return_value
+        mock_key.exists.return_value = False
+
+        key = self._s3.create_key(self.TEST_BUCKET, self.TEST_KEY, self.TEST_CONTENT)
+
+        self.assertEqual(mock_key, key)
+        mock_get_bucket.assert_called_once_with(self.TEST_BUCKET)
+        self._boto.s3.key.Key.assert_called_once_with(mock_get_bucket.return_value)
+        self.assertEqual(self.TEST_KEY, key.key)
+        mock_key.set_contents_from_string.assert_called_once_with(self.TEST_CONTENT)
+        self._logger.info.assert_called_once_with(
+            'Created a key %s in bucket %s with following contents: %s',
+            self.TEST_KEY, self.TEST_BUCKET, self.TEST_CONTENT
+        )
+
+    def test_create_key_duplicate(self):
+        mock_key = self._boto.s3.key.Key.return_value
+        mock_key.exists.return_value = True
+
+        with self.assertRaises(ValueError) as e:
+            self._s3.create_key(self.TEST_BUCKET, self.TEST_KEY, self.TEST_CONTENT)
+
+        self.assertEqual(
+            'Entry {0} already exists in S3 -- delete it first'.format(self.TEST_KEY),
+            str(e.exception)
+        )
+
     def test_remove_keys(self):
         mock_get_bucket = MagicMock()
 

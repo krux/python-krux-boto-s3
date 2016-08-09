@@ -158,7 +158,7 @@ class S3(object):
         k.key = key
 
         if k.exists():
-            raise ValueError('Entry {0} already exists in S3 -- delete it first'.format(key.Key))
+            raise ValueError('Entry {0} already exists in S3 -- delete it first'.format(k.key))
 
         k.set_contents_from_string(str_content)
 
