@@ -8,15 +8,20 @@
 #
 
 from __future__ import absolute_import
-from datetime import datetime
 import unittest
+
+#
+# Third party libraries
+#
+
+from mock import MagicMock, call, patch
 
 #
 # Internal libraries
 #
 
 from krux_boto.boto import Boto
-from krux_s3.s3 import S3
+from krux_s3.s3 import S3, NAME
 
 
 class S3Test(unittest.TestCase):
@@ -25,37 +30,51 @@ class S3Test(unittest.TestCase):
     TEST_CONTENT = 'TEST-TEST'
 
     def setUp(self):
-        self._s3 = S3(
-            boto=Boto()
-        )
+        self._logger = MagicMock()
+        self._stats = MagicMock()
 
-        self._timestamp = (datetime.utcnow() - datetime.utcfromtimestamp(0)).total_seconds()
+        self._boto = MagicMock()
 
-    def test_get_keys(self):
-        """
-        S3 data is correctly returned as a list
-        """
-        # TODO: This test needs to be improved using mock and stuff. But for the interest of time,
-        # let's leave it at this minimal state.
-        self.assertIsInstance(self._s3.get_keys(bucket_name=self.TEST_BUCKET), list)
+        with patch('krux_s3.s3.isinstance', return_value=True):
+            self._s3 = S3(
+                boto=self._boto,
+                logger=self._logger,
+                stats=self._stats,
+            )
 
-    def test_create_update_delete_keys(self):
+    def test_init(self):
         """
-        Keys can be created, updated, and deleted from S3
+        __init__() sets all values correctly.
         """
-        # TODO: This test needs to be improved using mock and stuff. But for the interest of time,
-        # let's leave it at this minimal state.
-        self._s3.create_key(
-            bucket_name=self.TEST_BUCKET,
-            key=self.TEST_KEY.format(timestamp=self._timestamp),
-            str_content=self.TEST_CONTENT,
-        )
-        self._s3.update_key(
-            bucket_name=self.TEST_BUCKET,
-            key=self.TEST_KEY.format(timestamp=self._timestamp),
-            str_content=self.TEST_CONTENT,
-        )
-        self._s3.remove_keys(
-            bucket_name=self.TEST_BUCKET,
-            keys=[self.TEST_KEY.format(timestamp=self._timestamp)],
-        )
+        self.assertEqual(NAME, self._s3._name)
+        self.assertEqual(self._logger, self._s3._logger)
+        self.assertEqual(self._stats, self._s3._stats)
+        self.assertEqual(self._boto, self._s3.boto)
+        self.assertEqual(None, self._s3._conn)
+        self.assertEqual({}, self._s3._buckets)
+
+    @patch('krux_s3.s3.get_logger')
+    @patch('krux_s3.s3.get_stats')
+    def test_init_no_arg(self, mock_get_stats, mock_get_logger):
+        """
+        __init__() correctly creates a logger and a stats when not provided.
+        """
+        with patch('krux_s3.s3.isinstance', return_value=True):
+            self._s3 = S3(
+                boto=self._boto
+            )
+
+        mock_get_logger.assert_called_once_with(NAME)
+        mock_get_stats.assert_called_once_with(prefix=NAME)
+
+    def test_init_boto_error(self):
+
+        """
+        __init__() properly errors out when krux_boto.boto.Boto is not passed
+        """
+        with self.assertRaises(TypeError) as e:
+            self._s3 = S3(
+                boto=self._boto
+            )
+
+        self.assertEqual('krux_s3.s3.S3 only supports krux_boto.boto.Boto', str(e.exception))
