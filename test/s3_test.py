@@ -173,6 +173,35 @@ class S3Test(unittest.TestCase):
             str(e.exception)
         )
 
+    def test_update_key(self):
+        mock_get_bucket = MagicMock()
+        mock_key = mock_get_bucket.return_value.get_key.return_value
+        self._s3._get_bucket = mock_get_bucket
+
+        key = self._s3.update_key(self.TEST_BUCKET, self.TEST_KEY, self.TEST_CONTENT)
+
+        self.assertEqual(mock_key, key)
+        mock_get_bucket.assert_called_once_with(self.TEST_BUCKET)
+        mock_get_bucket.return_value.get_key.assert_called_once_with(self.TEST_KEY)
+        mock_key.set_contents_from_string.assert_called_once_with(self.TEST_CONTENT)
+        self._logger.info.assert_called_once_with(
+            'Updated a key %s in bucket %s with following contents: %s',
+            self.TEST_KEY, self.TEST_BUCKET, self.TEST_CONTENT
+        )
+
+    def test_update_key_none(self):
+        mock_get_bucket = MagicMock()
+        mock_get_bucket.return_value.get_key.return_value = None
+        self._s3._get_bucket = mock_get_bucket
+
+        with self.assertRaises(ValueError) as e:
+            self._s3.update_key(self.TEST_BUCKET, self.TEST_KEY, self.TEST_CONTENT)
+
+        self.assertEqual(
+            'There are no key with name {0}'.format(self.TEST_KEY),
+            str(e.exception)
+        )
+
     def test_remove_keys(self):
         mock_get_bucket = MagicMock()
 
