@@ -25,10 +25,11 @@ from krux_s3.s3 import S3, NAME
 
 
 class S3Test(unittest.TestCase):
-    TEST_BUCKET = 'krux-tmp'
+    TEST_BUCKET = 'test-bucket'
     TEST_REGION = 'test-region-1'
-    TEST_KEY = 'TEST-KEY-{timestamp}'
-    TEST_CONTENT = 'TEST-TEST'
+    TEST_PREFIX = 'test'
+    TEST_KEY = 'test-key'
+    TEST_CONTENT = 'test-content'
 
     def setUp(self):
         self._logger = MagicMock()
@@ -128,3 +129,25 @@ class S3Test(unittest.TestCase):
 
         self.assertEqual(expected, actual)
         self.assertFalse(mock_get_bucket.called)
+
+    def test_get_keys(self):
+        mock_get_bucket = MagicMock()
+        mock_get_bucket.return_value.get_all_keys.return_value = [self.TEST_KEY]
+
+        self._s3._get_bucket = mock_get_bucket
+        keys = self._s3.get_keys(self.TEST_BUCKET, prefix=self.TEST_PREFIX)
+
+        self.assertEqual(keys, [self.TEST_KEY])
+        mock_get_bucket.assert_called_once_with(self.TEST_BUCKET)
+        mock_get_bucket.return_value.get_all_keys.assert_called_once_with(prefix=self.TEST_PREFIX)
+        self._logger.info.assert_called_once_with('Found following keys: %s', [self.TEST_KEY])
+
+    def test_remove_keys(self):
+        mock_get_bucket = MagicMock()
+
+        self._s3._get_bucket = mock_get_bucket
+        self._s3.remove_keys(self.TEST_BUCKET, keys=[self.TEST_KEY])
+
+        mock_get_bucket.assert_called_once_with(self.TEST_BUCKET)
+        mock_get_bucket.return_value.delete_keys.assert_called_once_with([self.TEST_KEY])
+        self._logger.info.assert_called_once_with('Deleting following keys: %s', [self.TEST_KEY])
