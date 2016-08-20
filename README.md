@@ -69,13 +69,11 @@ class MyApplication(object):
 
     def __init__(self, *args, **kwargs):
         boto = Boto(
-            logger=self.logger,
-            stats=self.stats,
+            access_key='my-access-key',
+            access_key='my-secret-key',
         )
         self.s3 = S3(
             boto=boto,
-            logger=self.logger,
-            stats=self.stats,
         )
 
     def run(self):
@@ -85,3 +83,42 @@ class MyApplication(object):
 ```
 
 As long as you get an instance of `krux_boto.boto.Boto`, the rest are the same. Refer to `krux_boto` module's [README](https://github.com/krux/python-krux-boto/blob/master/README.md) on various ways to instanciate the class.
+
+## Advanced usage - STS assumed role
+
+Following is an example of using `krux_s3` with STS assumed role:
+
+```python
+
+from getpass import getpass
+from boto.sts import STSConnection
+from krux_boto.boto import Boto
+from krux_s3.s3 import S3
+
+class MyApplication(object):
+
+    def __init__(self, *args, **kwargs):
+        mfa_token = getpass('Enter MFA code: ')
+
+        sts_connection = STSConnection()
+        assumedRoleObject = sts_connection.assume_role(
+            role_arn="arn:aws:iam::123456:role/some-role",
+            role_session_name="AssumeRoleSession1",
+            mfa_serial_number="arn:aws:iam::123456:mfa/user",
+            mfa_token=token,
+        )
+
+        boto = Boto(
+            access_key=assumedRoleObject.credentials.access_key,
+            secret_key=assumedRoleObject.credentials.secret_key,
+        )
+
+        self.s3 = S3(
+            boto=boto,
+            security_token=assumedRoleObject.credentials.session_token
+        )
+
+    def run(self):
+        for key in self.s3.get_keys(bucket_name='role-only-bucket'):
+            print key.get_contents_as_string()
+```
