@@ -15,6 +15,7 @@ from pprint import pprint
 #
 
 import boto.s3
+import boto.s3.connection
 
 #
 # Internal libraries
@@ -93,6 +94,7 @@ class S3(object):
     def __init__(
         self,
         boto,
+        security_token=None,
         logger=None,
         stats=None,
     ):
@@ -107,6 +109,7 @@ class S3(object):
             raise TypeError('krux_s3.s3.S3 only supports krux_boto.boto.Boto')
 
         self.boto = boto
+        self._security_token = security_token
 
         # Set up default cache
         self._conn = None
@@ -118,7 +121,9 @@ class S3(object):
         The connection is established on the first call for this instance (lazy) and cached.
         """
         if self._conn is None:
-            self._conn = self.boto.s3.connect_to_region(self.boto.cli_region)
+            self._conn = self.boto.s3.connection.S3Connection(
+                security_token=self._security_token,
+            )
 
         return self._conn
 
