@@ -135,6 +135,9 @@ class S3Test(unittest.TestCase):
         self.assertFalse(mock_get_bucket.called)
 
     def test_get_keys(self):
+        """
+        get_keys() properly returns a list of keys
+        """
         mock_get_bucket = MagicMock()
         mock_get_bucket.return_value.get_all_keys.return_value = [self.TEST_KEY]
 
@@ -147,6 +150,9 @@ class S3Test(unittest.TestCase):
         self._logger.info.assert_called_once_with('Found following keys: %s', [self.TEST_KEY])
 
     def test_create_key(self):
+        """
+        create_key() properly creates a key under the given bucket with the given content
+        """
         mock_get_bucket = MagicMock()
         self._s3._get_bucket = mock_get_bucket
 
@@ -166,6 +172,9 @@ class S3Test(unittest.TestCase):
         )
 
     def test_create_key_duplicate(self):
+        """
+        create_key() properly throws an error when there is another key with the same name
+        """
         mock_key = self._boto.s3.key.Key.return_value
         mock_key.exists.return_value = True
 
@@ -178,6 +187,9 @@ class S3Test(unittest.TestCase):
         )
 
     def test_update_key(self):
+        """
+        update_key() properly update a key under the given bucket with the given content
+        """
         mock_get_bucket = MagicMock()
         mock_key = mock_get_bucket.return_value.get_key.return_value
         self._s3._get_bucket = mock_get_bucket
@@ -194,6 +206,9 @@ class S3Test(unittest.TestCase):
         )
 
     def test_update_key_none(self):
+        """
+        update_key() properly throws an error when there is no key with the same name
+        """
         mock_get_bucket = MagicMock()
         mock_get_bucket.return_value.get_key.return_value = None
         self._s3._get_bucket = mock_get_bucket
@@ -207,6 +222,9 @@ class S3Test(unittest.TestCase):
         )
 
     def test_remove_keys(self):
+        """
+        remove_keys() properly deletes the keys under the given bucket
+        """
         mock_get_bucket = MagicMock()
 
         self._s3._get_bucket = mock_get_bucket
