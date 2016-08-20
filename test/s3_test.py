@@ -25,6 +25,7 @@ from krux_s3.s3 import S3, NAME
 
 
 class S3Test(unittest.TestCase):
+    TEST_SECURITY_TOKEN = 'test-token'
     TEST_BUCKET = 'test-bucket'
     TEST_REGION = 'test-region-1'
     TEST_PREFIX = 'test'
@@ -42,6 +43,7 @@ class S3Test(unittest.TestCase):
         with patch('krux_s3.s3.isinstance', return_value=True):
             self._s3 = S3(
                 boto=self._boto,
+                security_token=self.TEST_SECURITY_TOKEN,
                 logger=self._logger,
                 stats=self._stats,
             )
@@ -54,6 +56,7 @@ class S3Test(unittest.TestCase):
         self.assertEqual(self._logger, self._s3._logger)
         self.assertEqual(self._stats, self._s3._stats)
         self.assertEqual(self._boto, self._s3.boto)
+        self.assertEqual(self.TEST_SECURITY_TOKEN, self._s3._security_token)
         self.assertEqual(None, self._s3._conn)
         self.assertEqual({}, self._s3._buckets)
 
@@ -68,6 +71,7 @@ class S3Test(unittest.TestCase):
                 boto=self._boto
             )
 
+        self.assertIsNone(self._s3._security_token)
         mock_get_logger.assert_called_once_with(NAME)
         mock_get_stats.assert_called_once_with(prefix=NAME)
 
@@ -87,30 +91,30 @@ class S3Test(unittest.TestCase):
         """
         _get_connection() properly returns a connection object and caches it
         """
-        mock_connect_to_region = self._boto.s3.connect_to_region
-        expected = mock_connect_to_region.return_value
+        mock_connection = self._boto.s3.connection.S3Connection
+        expected = mock_connection.return_value
         actual = self._s3._get_connection()
 
         self.assertEqual(expected, actual)
         self.assertEqual(expected, self._s3._conn)
-        mock_connect_to_region.assert_called_once_with(self.TEST_REGION)
+        mock_connection.assert_called_once_with(security_token=self.TEST_SECURITY_TOKEN)
 
     def test_get_connection_cached(self):
         """
         _get_connection() properly uses the cache when it exists
         """
-        mock_connect_to_region = self._boto.s3.connect_to_region
+        mock_connection = self._boto.s3.connection.S3Connection
         expected = MagicMock()
         self._s3._conn = expected
 
         self.assertEqual(expected, self._s3._get_connection())
-        self.assertFalse(mock_connect_to_region.called)
+        self.assertFalse(mock_connection.called)
 
     def test_get_bucket(self):
         """
         _get_bucket() properly returns a bucket and caches it
         """
-        mock_get_bucket = self._boto.s3.connect_to_region.return_value.get_bucket
+        mock_get_bucket = self._boto.s3.connection.S3Connection.return_value.get_bucket
         expected = mock_get_bucket.return_value
         actual = self._s3._get_bucket(self.TEST_BUCKET)
 
@@ -122,7 +126,7 @@ class S3Test(unittest.TestCase):
         """
         _get_bucket() properly uses the cache when it exists
         """
-        mock_get_bucket = self._boto.s3.connect_to_region.return_value.get_bucket
+        mock_get_bucket = self._boto.s3.connection.S3Connection.return_value.get_bucket
         expected = MagicMock()
         self._s3._buckets[self.TEST_BUCKET] = expected
         actual = self._s3._get_bucket(self.TEST_BUCKET)
