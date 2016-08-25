@@ -70,7 +70,7 @@ class MyApplication(object):
     def __init__(self, *args, **kwargs):
         boto = Boto(
             access_key='my-access-key',
-            access_key='my-secret-key',
+            secret_key='my-secret-key',
         )
         self.s3 = S3(
             boto=boto,
