@@ -2,7 +2,7 @@
 --extra-index-url https://staticfiles.krxd.net/foss/pypi/
 
 # Krux-boto library which this is built on
-krux-boto==1.0.1
+krux-boto==1.0.2
 
 # Transitive libraries
 # This is needed so there are no version conflicts when
@@ -10,7 +10,7 @@ krux-boto==1.0.1
 # and another one does.
 
 # From krux-boto
-krux-stdlib==2.1.1
+krux-stdlib==2.1.4
 boto==2.39.0
 boto3==1.2.3
 pystache==0.5.4
@@ -18,8 +18,8 @@ Sphinx==1.2b1
 Jinja2==2.6
 Pygments==1.6
 docutils==0.10
-kruxstatsd==0.2.2
-statsd==2.0.3
+kruxstatsd==0.2.4
+statsd==2.0.3  # statsd is pegged at 2.0.3 by kruxstatsd
 argparse==1.2.1
 GitPython==0.3.2.RC1
 simplejson==3.3.0
