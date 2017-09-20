@@ -8,20 +8,24 @@
 #
 
 from __future__ import absolute_import
-import os
 
 #
 # Internal libraries
 #
 
-from krux.cli import get_group
 import krux_boto.cli
+from krux_s3 import VERSION
 from krux_s3.s3 import add_s3_cli_arguments, get_s3, NAME
 
 
 class Application(krux_boto.cli.Application):
 
     def __init__(self, name=NAME):
+        # XXX: This is intended to be using NAME. name parameter is designed to be something you can override.
+        #      However, in order to handle CLI inheritance, we need to have a way to distinguish this CLI class from
+        #      the CLI class that is inheriting this class. Thus, we use NAME here.
+        self._VERSIONS[NAME] = VERSION
+
         # Call to the superclass to bootstrap.
         super(Application, self).__init__(name=name)
 

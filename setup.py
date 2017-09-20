@@ -12,14 +12,14 @@ Package setup for krux-s3
 #
 from __future__ import absolute_import
 from setuptools import setup, find_packages
+from krux_s3 import VERSION
 
-# We use the version to construct the DOWNLOAD_URL.
-VERSION = '0.1.1'
 
 # URL to the repository on Github.
 REPO_URL = 'https://github.com/krux/python-krux-boto-s3'
 # Github will generate a tarball as long as you tag your releases, so don't
 # forget to tag!
+# We use the version to construct the DOWNLOAD_URL.
 DOWNLOAD_URL = ''.join((REPO_URL, '/tarball/release/', VERSION))
 
 
