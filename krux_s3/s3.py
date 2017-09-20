@@ -25,6 +25,7 @@ from krux_boto.boto import Boto, add_boto_cli_arguments, get_boto
 from krux.logging import get_logger
 from krux.stats import get_stats
 from krux.cli import get_parser
+from krux.object import Object
 
 
 NAME = 'krux-s3'
@@ -78,7 +79,7 @@ def add_s3_cli_arguments(parser, include_boto_arguments=True):
         add_boto_cli_arguments(parser)
 
 
-class S3(object):
+class S3(Object):
     """
     A manager to handle all S3 related functions.
     Each instance is locked to a connection to a designated region (self.boto.cli_region).
@@ -88,13 +89,12 @@ class S3(object):
         self,
         boto,
         security_token=None,
+        name=NAME,
         logger=None,
         stats=None,
     ):
-        # Private variables, not to be used outside this module
-        self._name = NAME
-        self._logger = logger or get_logger(self._name)
-        self._stats = stats or get_stats(prefix=self._name)
+        # Call to the superclass to bootstrap.
+        super(S3, self).__init__(name=name, logger=logger, stats=stats)
 
         # Throw exception when Boto2 is not used
         # TODO: Start using Boto3 and reverse this check
