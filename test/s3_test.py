@@ -21,7 +21,71 @@ from mock import MagicMock, call, patch
 #
 
 from krux_boto.boto import Boto
-from krux_s3.s3 import S3, NAME
+from krux_s3.s3 import S3, NAME, get_s3
+
+
+class GetS3Test(unittest.TestCase):
+    FAKE_LOG_LEVEL = 'critical'
+    FAKE_ACCESS_KEY = 'FAKE_ACCESS_KEY'
+    FAKE_SECRET_KEY = 'FAKE_SECRET_KEY'
+    FAKE_REGION = 'us-gov-west-1'  # This is a region that Krux will never use.
+
+    _FAKE_COMMAND = [
+        'krux-boto',
+        '--boto-log-level', FAKE_LOG_LEVEL,
+        '--boto-access-key', FAKE_ACCESS_KEY,
+        '--boto-secret-key', FAKE_SECRET_KEY,
+        '--boto-region', FAKE_REGION,
+        '--foo',  # Adding an extra CLI argument to make sure this gets ignored without an error
+    ]
+
+    def setUp(self):
+        self.args = MagicMock(
+            boto_log_level=self.FAKE_LOG_LEVEL,
+            boto_access_key=self.FAKE_ACCESS_KEY,
+            boto_secret_key=self.FAKE_SECRET_KEY,
+            boto_region=self.FAKE_REGION
+        )
+
+        self.logger = MagicMock()
+        self.stats = MagicMock()
+
+    @patch('krux_s3.s3.get_boto')
+    def test_get_s3_with_args(self, mock_get_boto):
+        """
+        get_s3() correctly passes the arguments to S3 contructor
+        """
+        mock_get_boto.return_value = MagicMock(spec=Boto)
+
+        s3 = get_s3(self.args, self.logger, self.stats)
+
+        self.assertEqual(self.logger, s3._logger)
+        self.assertEqual(self.stats, s3._stats)
+        self.assertEqual(mock_get_boto.return_value, s3.boto)
+
+        mock_get_boto.assert_called_once_with(self.args, self.logger, self.stats)
+
+    @patch('sys.argv', _FAKE_COMMAND)
+    @patch('krux_s3.s3.get_parser')
+    @patch('krux_s3.s3.get_logger')
+    @patch('krux_s3.s3.get_stats')
+    @patch('krux_s3.s3.get_boto')
+    def test_get_s3_without_args(self, mock_get_boto, mock_get_stats, mock_get_logger, mock_get_parser):
+        """
+        get_s3() correctly parses the CLI arguments and pass them to S3 contructor
+        """
+        mock_get_parser.return_value.parse_known_args.return_value = [self.args]
+        mock_get_stats.return_value = self.stats
+        mock_get_logger.return_value = self.logger
+        mock_get_boto.return_value = MagicMock(spec=Boto)
+
+        s3 = get_s3()
+
+        self.assertEqual(self.logger, s3._logger)
+        self.assertEqual(self.stats, s3._stats)
+        self.assertEqual(mock_get_boto.return_value, s3.boto)
+
+        mock_get_boto.assert_called_once_with(self.args, self.logger, self.stats)
 
 
 class S3Test(unittest.TestCase):
@@ -37,7 +101,7 @@ class S3Test(unittest.TestCase):
         self._stats = MagicMock()
 
         self._boto = MagicMock(
-            cli_region=self.TEST_REGION
+            cli_region=self.TEST_REGION,
         )
 
         with patch('krux_s3.s3.isinstance', return_value=True):
@@ -60,9 +124,7 @@ class S3Test(unittest.TestCase):
         self.assertEqual(None, self._s3._conn)
         self.assertEqual({}, self._s3._buckets)
 
-    @patch('krux_s3.s3.get_logger')
-    @patch('krux_s3.s3.get_stats')
-    def test_init_no_arg(self, mock_get_stats, mock_get_logger):
+    def test_init_no_arg(self):
         """
         __init__() correctly creates a logger and a stats when not provided.
         """
@@ -72,8 +134,6 @@ class S3Test(unittest.TestCase):
             )
 
         self.assertIsNone(self._s3._security_token)
-        mock_get_logger.assert_called_once_with(NAME)
-        mock_get_stats.assert_called_once_with(prefix=NAME)
 
     def test_init_boto_error(self):
 

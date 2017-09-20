@@ -67,7 +67,7 @@ def get_s3(args=None, logger=None, stats=None):
     )
 
 
-def add_s3_cli_arguments(parser, include_boto_arguments=True):
+def add_s3_cli_arguments(parser, include_boto_arguments=True, *args, **kwargs):
     """
     Utility function for adding S3 specific CLI arguments.
     """
@@ -76,7 +76,7 @@ def add_s3_cli_arguments(parser, include_boto_arguments=True):
         # causing an error. This creates a way to circumvent that.
 
         # Add all the boto arguments
-        add_boto_cli_arguments(parser)
+        add_boto_cli_arguments(parser, *args, **kwargs)
 
 
 class S3(Object):
