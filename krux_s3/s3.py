@@ -8,12 +8,12 @@
 #
 
 from __future__ import absolute_import
-from pprint import pprint
 
 #
 # Third party libraries
 #
 
+# GOTCHA: Do not delete this unused import otherwise krux_boto.boto.s3 will not work properly.
 import boto.s3
 import boto.s3.connection
 
@@ -21,10 +21,11 @@ import boto.s3.connection
 # Internal libraries
 #
 
-from krux_boto import Boto, add_boto_cli_arguments
+from krux_boto.boto import Boto, add_boto_cli_arguments, get_boto
 from krux.logging import get_logger
 from krux.stats import get_stats
-from krux.cli import get_parser, get_group
+from krux.cli import get_parser
+from krux.object import Object
 
 
 NAME = 'krux-s3'
@@ -47,7 +48,11 @@ def get_s3(args=None, logger=None, stats=None):
     if not args:
         parser = get_parser()
         add_s3_cli_arguments(parser)
-        args = parser.parse_args()
+        # Parse only the known arguments added by add_boto_cli_arguments().
+        # We only need those arguments to create Boto object, nothing else.
+        # parse_known_args() return (Namespace, list of unknown arguments),
+        # we only care about the Namespace object here.
+        args = parser.parse_known_args()[0]
 
     if not logger:
         logger = get_logger(name=NAME)
@@ -55,22 +60,14 @@ def get_s3(args=None, logger=None, stats=None):
     if not stats:
         stats = get_stats(prefix=NAME)
 
-    boto = Boto(
-        log_level=args.boto_log_level,
-        access_key=args.boto_access_key,
-        secret_key=args.boto_secret_key,
-        region=args.boto_region,
-        logger=logger,
-        stats=stats,
-    )
     return S3(
-        boto=boto,
+        boto=get_boto(args, logger, stats),
         logger=logger,
         stats=stats,
     )
 
 
-def add_s3_cli_arguments(parser, include_boto_arguments=True):
+def add_s3_cli_arguments(parser, include_boto_arguments=True, *args, **kwargs):
     """
     Utility function for adding S3 specific CLI arguments.
     """
@@ -79,13 +76,10 @@ def add_s3_cli_arguments(parser, include_boto_arguments=True):
         # causing an error. This creates a way to circumvent that.
 
         # Add all the boto arguments
-        add_boto_cli_arguments(parser)
-
-    # Add those specific to the application
-    group = get_group(parser, NAME)
+        add_boto_cli_arguments(parser, *args, **kwargs)
 
 
-class S3(object):
+class S3(Object):
     """
     A manager to handle all S3 related functions.
     Each instance is locked to a connection to a designated region (self.boto.cli_region).
@@ -95,13 +89,12 @@ class S3(object):
         self,
         boto,
         security_token=None,
+        name=NAME,
         logger=None,
         stats=None,
     ):
-        # Private variables, not to be used outside this module
-        self._name = NAME
-        self._logger = logger or get_logger(self._name)
-        self._stats = stats or get_stats(prefix=self._name)
+        # Call to the superclass to bootstrap.
+        super(S3, self).__init__(name=name, logger=logger, stats=stats)
 
         # Throw exception when Boto2 is not used
         # TODO: Start using Boto3 and reverse this check

@@ -34,9 +34,7 @@ class Application(krux_boto.cli.Application):
         add_s3_cli_arguments(parser, include_boto_arguments=False)
 
     def run(self):
-        print self.s3.get_keys(
-            bucket_name='krux-tmp'
-        )
+        print(self.s3.get_keys(bucket_name='krux-tmp'))
 
 
 def main():
