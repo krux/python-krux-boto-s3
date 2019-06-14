@@ -14,9 +14,6 @@ enum34==1.1.6
 futures==3.2.0; python_version < '3.0'
 six==1.12.0; python_version > '3.0'
 
-# Krux-boto library which this is built on
-krux-boto==1.5.6
-
 # Transitive libraries
 # This is needed so there are no version conflicts when
 # one downstream library does NOT specify the version it wants,
