@@ -16,7 +16,7 @@ gitpython==2.1.14
 imagesize==1.1.0
 jinja2==2.10.3
 jmespath==0.9.4
-krux-boto==1.7.0
+krux-boto==1.7.1
 krux-stdlib==4.0.1
 kruxstatsd==0.3.6
 lockfile==0.12.2
