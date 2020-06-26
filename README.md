@@ -1,3 +1,8 @@
+![](https://cdn2.iconfinder.com/data/icons/perfect-flat-icons-2/512/Terminate_wind_up_symbol_stop_send_away_sack.png)
+
+# Deprecated and no longer in use or being maintained.
+This repo exists as a historical archive.
+
 # krux_s3
 
 `krux_s3` is a library that provides wrapper functions for common S3 usage. It uses `krux_boto` to connect to AWS S3.
